@@ -78,7 +78,6 @@ def get_io_latency(device):
     }
     return latencies[device]
 
-
 class Process:
     def __init__(self, pid):
         self.pid = pid
@@ -191,8 +190,8 @@ class Dispatcher:
 
     def dispatch(self, scheduler):
         """Runs the picked process from the scheduler"""
-        self.current_process.run(scheduler)
-        #scheduler.current_process.run(scheduler)
+        #self.current_process.run(scheduler)
+        scheduler.current_process.run(scheduler)
 
 
 class TheQueue:
@@ -221,6 +220,18 @@ class TheQueue:
 
     def empty(self):
         return self.tail is None and self.head is None
+
+    # Making the queue iterable
+    def __iter__(self):
+        self._iter_node = self.head  # Start iteration from head
+        return self
+
+    def __next__(self):
+        if self._iter_node is None:
+            raise StopIteration
+        value = self._iter_node.value
+        self._iter_node = self._iter_node.next
+        return value
 
 
 class RoundRobin:
