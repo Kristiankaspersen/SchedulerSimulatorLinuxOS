@@ -8,3 +8,4 @@ class PCBStatus(Enum):
     READY = 1
     EXIT = 2
     BLOCKED = 3
+    RUNNING = 4
