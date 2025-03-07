@@ -1,9 +1,17 @@
+import asyncio
 
+from schedsimulator.plane_process import PlaneProcess
 from schedsimulator.round_robin import RoundRobin
+from schedsimulator.processes.math_yield_process import MathProcess
 
+async def main():
+    round_robin = RoundRobin(3)  # Initialize with 100 processes
+    round_robin.add_process(MathProcess(4))
+    await round_robin.scheduler() # Starts scheduling
 
-roundRobin = RoundRobin(1)
-roundRobin.dispatcher.dispatch(roundRobin)
+if __name__ == "__main__":
+    asyncio.run(main())  # Properly starts the event loop
+
 
 # NOTES:
 # - I will use a thread to simulate HW interrupts that will run in the background. For now this will be done for I/O and Sleep blocks in the scheduler.
