@@ -1,16 +1,21 @@
 import asyncio
 
 from schedsimulator.plane_process import PlaneProcess
-from schedsimulator.round_robin import RoundRobin
+from schedsimulator.round_robin_greenlet import RoundRobinGreenlet
 from schedsimulator.processes.math_yield_process import MathProcess
 
-async def main():
-    round_robin = RoundRobin(3)  # Initialize with 100 processes
-    round_robin.add_process(MathProcess(4))
-    await round_robin.scheduler() # Starts scheduling
+# async def main():
+#     round_robin = RoundRobin(3)  # Initialize with 100 processes
+#     round_robin.add_process(MathProcess(4))
+#     await round_robin.scheduler() # Starts scheduling
+#
+# if __name__ == "__main__":
+#     asyncio.run(main())  # Properly starts the event loop
 
-if __name__ == "__main__":
-    asyncio.run(main())  # Properly starts the event loop
+round_robin = RoundRobinGreenlet(10)  # Initialize with 100 processes
+round_robin.scheduler() # Starts scheduling
+
+
 
 
 # NOTES:
