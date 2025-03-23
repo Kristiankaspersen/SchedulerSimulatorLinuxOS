@@ -1,13 +1,7 @@
-import heapq
-import random
 import signal
 import time
-import asyncio
-import inspect
-import greenlet
 
 from schedsimulator.Exceptions.greenletDeadExc import GreenletDeadError
-from schedsimulator.processes.process import Process
 from schedsimulator.processes.cpu_heavy_proc import GreenletProc
 from schedsimulator.structures.process_status import PCBStatus
 
@@ -44,61 +38,52 @@ class RoundRobinGreenlet:
 
     def preempt_handler(self, signum, frame):
         """Handles preemption by switching back to the scheduler."""
-        print(f"⚡ SIGALRM received! Preempting process {self.current_process.pid}")
+       # print(f"SIGALRM received! Preempting process {self.current_process.pid}")
 
-        # Mark process as READY
         self.current_process.status = PCBStatus.READY
 
         # Explicitly switch back to the scheduler
         self.current_process.green.parent.switch()
-
-    def hey(self):
-        print("HEEEEEEEEEEY BITCH!!!!")
 
     def scheduler(self):
 
         while self.current_process is not None:
             match self.current_process.status:
                 case PCBStatus.NEW:
-                    print("STATUS NEW, sched")
+                    #print("STATUS NEW, sched")
                     self.current_process.status = PCBStatus.READY
                 case PCBStatus.READY:
-                    print("STATUS READY, sched, preempt")
+                    #print("STATUS READY, sched, preempt")
                     self.current_process = self.current_process.next
-
+                    ## This is the only place where I do something with the ready queue in the scheduler
                 case PCBStatus.EXIT:
                     print("STATUS EXIT, sched")
+                    # Remove process is a part of linked list ready queue
                     self.remove_process()
                 case PCBStatus.BLOCKED:
                     print("STATUS BLOCKED sched")
                     # Is it possible to just do the blocking here.
+                    # Do nothig here, since it is been blocked, and when a process is removed, we schedule the next to be current running.
                 case PCBStatus.RUNNING:
                     print("Just keep running")
                 case _:
                     # Unknown
                     print("Noob")
 
-            print(f"Current number of processes in queue {self.processes_in_ready_queue}")
+            #print(f"Current number of processes in queue {self.processes_in_ready_queue}")
             current = self.current_process
             current_proceeses = []
             for i in range(self.processes_in_ready_queue):
                 current_proceeses.append(current.pid)
                 current = current.next
-            print(current_proceeses)
+            #print(current_proceeses)
             if self.current_process is not None:
                 # So here the dispather will run, but since this is higher level, there is no need for the dispatcher
                 # And we wil just simulate that with running the correct process.
-                # If new run
-                # Skip blocked or finished processes
-                # while self.current_process and (
-                #         self.current_process.status == PCBStatus.BLOCKED or self.current_process.greenlet.dead):
-                #     print(f"⏭ Skipping Process {self.current_process.pid} (Blocked/Finished)")
-                #     self.current_process = self.current_process.next
+
                 if self.current_process.green.dead:
                     raise GreenletDeadError("Greenlet is dead, this is not supposed to happen, the greenlet should call exit!")
-                print("DOES THIS HAPPEN")
                 self.current_process.green.switch(self)  # Resume execution
-                print("DOES THIS HAPPEN")
             else:
                 # So this will always happen when exit is called, since then the last one is removed.
                 # So now the program just stops when there are no more threads left, is this what I want? Or a halt?
@@ -108,6 +93,12 @@ class RoundRobinGreenlet:
             print("The READY queue is empty, and the scheduler has stopped")
             # Wait for new processes to start running again.
 
+    def non_blocking_sleep(self, seconds):
+        start_time = time.time()  # Get current time
+        while time.time() - start_time < seconds:
+            pass
+
+
     def exit(self):
         self.current_process.status = PCBStatus.EXIT
 
@@ -116,6 +107,7 @@ class RoundRobinGreenlet:
 
     def block(self, blocked_queue):
         # Put current process in blocked queue
+        self.current_process.status = PCBStatus.BLOCKED
         removed_process = self.remove_process()
         blocked_queue.push(removed_process)
 
