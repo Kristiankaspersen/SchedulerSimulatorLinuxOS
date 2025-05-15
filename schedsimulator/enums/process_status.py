@@ -3,7 +3,7 @@
 from enum import Enum
 
 
-class PCBStatus(Enum):
+class TaskStatus(Enum):
     NEW = 0
     READY = 1
     EXIT = 2

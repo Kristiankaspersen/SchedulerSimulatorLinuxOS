@@ -1,8 +1,55 @@
-import asyncio
+import multiprocessing
 
-from schedsimulator.plane_process import PlaneProcess
-from schedsimulator.round_robin_greenlet import RoundRobinGreenlet
-from schedsimulator.processes.math_yield_process import MathProcess
+import torch
+import threading
+import time
+from schedsimulator.RRscheduler import RRScheduler
+from schedsimulator.eevdf_first_sched import EEVDFScheduler
+
+
+roundrobin = False
+
+if __name__ == '__main__':
+
+    if roundrobin:
+        scheduler = RRScheduler()
+        #scheduler.setup_hardware_process()
+        scheduler.make_sim_RR(10)
+
+    else:
+
+
+
+        num_tasks = 20
+        base_slice = 10
+        num_runs = 1
+
+        preemption_results = []
+        throughput_results = []
+        latency_results = []
+
+        for i in range(num_runs):
+            print(f"\n--- Run {i + 1} ---")
+            eevdf_scheduler = EEVDFScheduler()
+            preemptions, throughput, avg_latency = eevdf_scheduler.make_sim_eevdf(num_tasks)
+
+            preemption_results.append(preemptions)
+            throughput_results.append(throughput)
+            latency_results.append(avg_latency)
+
+        avg_preemptions = sum(preemption_results) / num_runs
+        avg_throughput = sum(throughput_results) / num_runs
+        avg_latency = sum(latency_results) / num_runs
+
+        print("\n=== Summary ===")
+        print(f"Num tasks: {num_tasks}")
+        print(f"Base Slice: {base_slice}")
+        print(f"Average preemptions: {avg_preemptions:.2f}")
+        print(f"Average throughput: {avg_throughput:.7f} tasks/sec")
+        print(f"Average latency: {avg_latency / 1_000_000:.3f} ms")
+
+
+
 
 # async def main():
 #     round_robin = RoundRobin(3)  # Initialize with 100 processes
@@ -12,8 +59,59 @@ from schedsimulator.processes.math_yield_process import MathProcess
 # if __name__ == "__main__":
 #     asyncio.run(main())  # Properly starts the event loop
 
-round_robin = RoundRobinGreenlet(10)  # Initialize with 100 processes
-round_robin.scheduler() # Starts scheduling
+# round_robin = RoundRobinGreenlet(2)  # Initialize with 100 processes
+# round_robin.add_process(LockProcess(11, 13))
+# round_robin.add_process(LockProcess(12, 17))
+# round_robin.scheduler() # Starts scheduling
+
+
+# RT_scheduler = RTScheduler()
+# RT_scheduler.make_sim_FIFO(5)
+
+# counter = 0
+#
+# def handler(signum, frame):
+#     global counter
+#     counter += 1
+#     print(f"TICK {counter}")
+#
+# signal.signal(signal.SIGALRM, handler)
+# signal.setitimer(signal.ITIMER_REAL, 0.1, 0.1)
+
+# x = torch.randn(10000, 10000)
+# for _ in range(10):
+#     y = x @ x  # Long matrix multiply in native C/CUDA
+
+
+# for _ in range(10):
+#     for i in range(10**7):
+#         pass
+
+
+
+# counter = 0
+# running = True
+#
+# def tick():
+#     global counter
+#     while running:
+#         counter += 1
+#         print(f"TICK {counter}")
+#         time.sleep(0.1)  # 100ms
+#
+# # Start the ticking thread
+# tick_thread = threading.Thread(target=tick, daemon=True)
+# tick_thread.start()
+#
+# # Heavy computation in main thread
+# timer.start()
+# x = torch.randn(10000, 10000)
+# for _ in range(10):
+#     y = x @ x
+#
+# running = False  # Stop the ticking thread gracefully
+# tick_thread.join(timeout=1)
+
 
 
 
