@@ -4,8 +4,8 @@ import time
 import asyncio
 import inspect
 
-from schedsimulator.processes.process import Process
-from schedsimulator.structures.process_status import PCBStatus
+from schedsimulator.old.process import Process
+from schedsimulator.enums.process_status import TaskStatus
 
 
 class RoundRobin:
@@ -38,18 +38,18 @@ class RoundRobin:
     async def scheduler(self):
         while self.current_process is not None:
             match self.current_process.status:
-                case PCBStatus.NEW:
+                case TaskStatus.NEW:
                     print("STATUS NEW, sched")
-                case PCBStatus.READY:
+                case TaskStatus.READY:
                     print("STATUS READY, sched, preempt")
                     self.current_process = self.current_process.next
-                case PCBStatus.EXIT:
+                case TaskStatus.EXIT:
                     print("STATUS EXIT, sched")
                     self.remove_process()
-                case PCBStatus.BLOCKED:
+                case TaskStatus.BLOCKED:
                     print("STATUS BLOCKED sched")
                     # Is it possible to just do the blocking here.
-                case PCBStatus.RUNNING:
+                case TaskStatus.RUNNING:
                     print("Just keep running")
                 case _:
                     # Unknown
@@ -66,11 +66,10 @@ class RoundRobin:
                 # So here the dispather will run, but since this is higher level, there is no need for the dispatcher
                 # And we wil just simulate that with running the correct process.
                 # If new run
-                if self.current_process.status == PCBStatus.NEW:
+                if self.current_process.status == TaskStatus.NEW:
                     if inspect.isasyncgenfunction(self.current_process.run):
-                        print("Does this happen??")
                         self.current_process.gen = self.current_process.run(self)
-                        self.current_process.status = PCBStatus.READY
+                        self.current_process.status = TaskStatus.READY
                         await anext(self.current_process.gen)
                     else:
                         await self.current_process.run(self)
@@ -97,10 +96,10 @@ class RoundRobin:
             # Wait for new processes to start running again.
 
     def exit(self):
-        self.current_process.status = PCBStatus.EXIT
+        self.current_process.status = TaskStatus.EXIT
 
     def yields(self):
-        self.current_process.status = PCBStatus.READY
+        self.current_process.status = TaskStatus.READY
 
     def block(self, blocked_queue):
         # Put current process in blocked queue
@@ -136,10 +135,10 @@ class RoundRobin:
 
     def add_process(self, process):
         # I put it back in the ready queue here. I put it
-        if PCBStatus.BLOCKED == process.status:
-            process.status = PCBStatus.READY
+        if TaskStatus.BLOCKED == process.status:
+            process.status = TaskStatus.READY
         else:
-            process.status = PCBStatus.NEW
+            process.status = TaskStatus.NEW
         self.current_process.prev.next = process
         process.prev = self.current_process.prev
         self.current_process.prev = process

@@ -3,7 +3,7 @@ import time
 
 from schedsimulator.Exceptions.greenletDeadExc import GreenletDeadError
 from schedsimulator.processes.cpu_heavy_proc import GreenletProc
-from schedsimulator.structures.process_status import PCBStatus
+from schedsimulator.enums.process_status import TaskStatus
 
 
 class RoundRobinGreenlet:
@@ -40,31 +40,32 @@ class RoundRobinGreenlet:
         """Handles preemption by switching back to the scheduler."""
        # print(f"SIGALRM received! Preempting process {self.current_process.pid}")
 
-        self.current_process.status = PCBStatus.READY
+        self.current_process.status = TaskStatus.READY
 
         # Explicitly switch back to the scheduler
         self.current_process.green.parent.switch()
+        print("DOES THIS EVER HAPPENDSA DJANDOANDIOSANIDONAIODNSAIODNOANDOISANDIOADNIOSAID OKSEE!!!")
 
     def scheduler(self):
 
         while self.current_process is not None:
             match self.current_process.status:
-                case PCBStatus.NEW:
+                case TaskStatus.NEW:
                     #print("STATUS NEW, sched")
-                    self.current_process.status = PCBStatus.READY
-                case PCBStatus.READY:
+                    self.current_process.status = TaskStatus.READY
+                case TaskStatus.READY:
                     #print("STATUS READY, sched, preempt")
                     self.current_process = self.current_process.next
                     ## This is the only place where I do something with the ready queue in the scheduler
-                case PCBStatus.EXIT:
+                case TaskStatus.EXIT:
                     print("STATUS EXIT, sched")
                     # Remove process is a part of linked list ready queue
                     self.remove_process()
-                case PCBStatus.BLOCKED:
+                case TaskStatus.BLOCKED:
                     print("STATUS BLOCKED sched")
                     # Is it possible to just do the blocking here.
                     # Do nothig here, since it is been blocked, and when a process is removed, we schedule the next to be current running.
-                case PCBStatus.RUNNING:
+                case TaskStatus.RUNNING:
                     print("Just keep running")
                 case _:
                     # Unknown
@@ -100,14 +101,14 @@ class RoundRobinGreenlet:
 
 
     def exit(self):
-        self.current_process.status = PCBStatus.EXIT
+        self.current_process.status = TaskStatus.EXIT
 
     def yields(self):
-        self.current_process.status = PCBStatus.READY
+        self.current_process.status = TaskStatus.READY
 
     def block(self, blocked_queue):
         # Put current process in blocked queue
-        self.current_process.status = PCBStatus.BLOCKED
+        self.current_process.status = TaskStatus.BLOCKED
         removed_process = self.remove_process()
         blocked_queue.push(removed_process)
 
@@ -140,10 +141,10 @@ class RoundRobinGreenlet:
 
     def add_process(self, process):
         # I put it back in the ready queue here. I put it
-        if PCBStatus.BLOCKED == process.status:
-            process.status = PCBStatus.READY
+        if TaskStatus.BLOCKED == process.status:
+            process.status = TaskStatus.READY
         else:
-            process.status = PCBStatus.NEW
+            process.status = TaskStatus.NEW
         self.current_process.prev.next = process
         process.prev = self.current_process.prev
         self.current_process.prev = process

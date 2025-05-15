@@ -1,9 +1,12 @@
+import time
+
 import greenlet
 from schedsimulator.enums.process_status import TaskStatus
-
+from greenlet import getcurrent
+from schedsimulator.enums.process_policy import Policy
 
 class MathYieldProcess:
-    def __init__(self, pid):
+    def __init__(self, pid, priority, policy=Policy.SCHED_OTHER):
         self.pid = pid
         # self.greenlet = greenlet.greenlet(self.run)  # Create a greenlet for this process
         self.green = greenlet.greenlet(self.run)  # Pass self as an argument
@@ -11,12 +14,15 @@ class MathYieldProcess:
         self.prev = None
         self.status = TaskStatus.NEW
         self.counter = 0
+        self.policy = policy
+        self.priority = priority # Just set it to 50 for now.
 
-    def run(self, scheduler):
+    def run(self):
             """
             Generator that calculates sum of numbers recursively and yields execution.
             """
             DELAY_VAL = 0.1  # Simulation delay
+            print(getcurrent().parent)
 
 
             def print_counter(done):
@@ -28,7 +34,7 @@ class MathYieldProcess:
             def rec(n):
                 """Recursive sum function that yields execution at multiples of 37."""
                 if n % 37 == 0:
-                    scheduler.yields()
+                    self.status = TaskStatus.READY
                     self.green.parent.switch()
                 if n == 0:
                     return 0
@@ -39,15 +45,21 @@ class MathYieldProcess:
             for i in range(101):
 
                 result = rec(i)
-                print(f"Did you know that 1 + ... + {i} = {result}")
+                print(f"Did you know that 1 + ... + {i} = {result} - {self.pid}")
 
                 print_counter(False)
                 self.counter += 1
-                scheduler.yields()
+                self.status = TaskStatus.READY
                 self.green.parent.switch()
-                scheduler.non_blocking_sleep(DELAY_VAL)  # Simulate delay
+                non_blocking_sleep(DELAY_VAL)  # Simulate delay
 
             print_counter(True)
-            scheduler.yields()
+            self.status = TaskStatus.READY
             self.green.parent.switch()  # Final yield before exiting
-            scheduler.exit()
+            self.status = TaskStatus.EXIT
+
+def non_blocking_sleep(seconds):
+    start_time = time.time()  # Get current time
+    while time.time() - start_time < seconds:
+        pass
+

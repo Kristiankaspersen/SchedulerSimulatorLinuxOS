@@ -14,10 +14,14 @@ class LockProcess:
     shared_value = 0
     shared_exit_count = 0
 
-    def __init__(self, pid, yield_freq):
+    def __init__(self, pid, policy, yield_freq):
         self.pid = pid
         self.counter = 0
         self.status = TaskStatus.NEW
+        self.policy = policy
+        self.priority = 50  # Just start with giving same priority.
+
+        a
         self.next = None
         self.prev = None
         self.green = greenlet.greenlet(self.run)

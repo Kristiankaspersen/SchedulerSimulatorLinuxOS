@@ -1,11 +1,10 @@
-import curses
 import time
-from schedsimulator.structures.process_status import PCBStatus
+from schedsimulator.enums.process_status import TaskStatus
 
 class MathProcess:
     def __init__(self, pid):
         self.pid = pid
-        self.status = PCBStatus.NEW
+        self.status = TaskStatus.NEW
         self.counter = 0
         self.next = None
         self.prev = None
@@ -42,7 +41,7 @@ class MathProcess:
                 scheduler.yields()
                 #result = yield from rec(i)  # Yielding inside recursion
                 #result = 0  # Initialize result
-                #gen = rec(i)  # ✅ Create the normal generator manually
+                #gen = rec(i)  # Create the normal generator manually
                 result = 0
                 gen = rec(i)
                 try:

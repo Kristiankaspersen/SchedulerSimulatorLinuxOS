@@ -1,4 +1,4 @@
-from schedsimulator.structures.linked_queue import TheQueue
+from schedsimulator.old.linked_queue import TheQueue
 
 
 class OSLock:
