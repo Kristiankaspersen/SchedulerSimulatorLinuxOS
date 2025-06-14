@@ -17,6 +17,8 @@ class CfsRunQueue:
         self.cpu_preempt_intervals = deque(maxlen=50)
         self.cpu_latencies = []
         self.cpu_latencies_virtual = []
+        self.io_latencies = []
         self.num_interactive = 0
         self.num_cpu = 0
         self.num_other = 0
+        self.interactive_arrivals = deque()
