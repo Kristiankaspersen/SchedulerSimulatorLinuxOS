@@ -344,7 +344,7 @@ def test_min_vruntime_after_inserts():
         tasks.append(task)
         tree.insert(task)
 
-        # 🔍 Debug print of all task nodes
+        # Debug print of all task nodes
         print("\n=== Task Node States ===")
         for t in tasks:
             if t.rb_node:
@@ -352,7 +352,7 @@ def test_min_vruntime_after_inserts():
             else:
                 print(f"pid={t.pid}, vruntime={t.vruntime}, node is missing")
 
-        # 🔍 Debug print of root and children
+        #  Debug print of root and children
         print("\n=== Tree Root State ===")
         print(f"ROOT: {tree.root.task.vruntime}, min_vruntime: {tree.root.min_vruntime}")
         if tree.root.left:
@@ -376,7 +376,7 @@ def test_min_vruntime_after_deletions():
         tasks.append(task)
         tree.insert(task)
 
-    # 🔍 Reconfirm min before deletion
+    #  Reconfirm min before deletion
     expected_min = min(vruntimes)
     assert tree.root.min_vruntime == expected_min, f"Expected {expected_min}, got {tree.root.min_vruntime}"
 
@@ -384,15 +384,15 @@ def test_min_vruntime_after_deletions():
     min_task = next(t for t in tasks if t.vruntime == expected_min)
     tree.remove(min_task)
 
-    # 🔁 Remove from local list too
+    # Remove from local list too
     tasks.remove(min_task)
     remaining_vruntimes = [t.vruntime for t in tasks]
 
-    # 🔍 After deletion, min_vruntime should match the next smallest
+    # After deletion, min_vruntime should match the next smallest
     new_expected_min = min(remaining_vruntimes)
     assert tree.root.min_vruntime == new_expected_min, f"Expected {new_expected_min}, got {tree.root.min_vruntime}"
 
-    # ✅ Final print for confirmation
+    # Final print for confirmation
     print("\nAfter Deletion:")
     print(f"Deleted pid={min_task.pid}, vruntime={min_task.vruntime}")
     print(f"New expected min: {new_expected_min}")

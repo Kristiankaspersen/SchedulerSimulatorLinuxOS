@@ -10,7 +10,8 @@ from schedsimulator.enums.task_type import TaskType
 class Task:
     cpu_offset = 0
     interactive_offset = 0
-    number_of_tasks = 0 # Not sure if I am using this.
+    number_of_tasks = 0  # Not sure if I am using this.
+
     def __init__(self, type, pid):
         self.pid = pid
         self.greenlet = greenlet.greenlet(self.run)  # Create a greenlet for this process
@@ -31,11 +32,9 @@ class Task:
         # Think about how this is going to be
         self.tick_offset = 0
 
-
-
         ### Not going to include, but for test now.
         # ----- Unique props for this process ------
-        #self.cpu_work = random.randint(10000, 1000000)
+        # self.cpu_work = random.randint(10000, 1000000)
         self.tick_count = 0
         self.cpu_work = 100000000
         self.other_number = self.cpu_work // 10
@@ -46,45 +45,55 @@ class Task:
         self.enqueue_time = 0
         self.enqueue_time_virtual = 0
         self.latency = 0
+        self.last_spawn_tick = 1000000
 
-
-
-    def run(self, interrupt_tick):
-        """Simulated CPU-bound task that gets preempted."""
-        # print(f"▶️ Process {self.pid} started.")
+    def run(self, cfs_rq, interrupt_tick):
 
         if self.type == TaskType.CPU:
-            print(f"CPU: {self.pid}")
             compute = 0
-            while self.tick_count <= 400:
+            while self.tick_count <= 1200:
                 compute += 1
+                # print(self.pid)
+                # print(self.status)
+                # print(cfs_rq.nr_queued)
+
+                # if self.tick_count % 100 == 0 and self.tick_count != self.last_spawn_tick:
+                #     if cfs_rq.num_interactive == 0:
+                #         print("How many are added")
+                #         new_task = Task(TaskType.RESP, self.tick_count + 100)
+                #         enqueue_entity(cfs_rq, new_task)
+                #         print(cfs_rq.num_interactive)
+                #         self.last_spawn_tick = self.tick_count
+
+            # cpu_work = 0
+            # while cpu_work <= self.cpu_work:
+            #     cpu_work += 1
+            # print(cpu_work)
             print(self.tick_count)
             interrupt_tick.enabled = False
             self.status = TaskStatus.EXIT
             greenlet.getcurrent().parent.switch()
         elif self.type == TaskType.RESP:
-            print(f"RESP: {self.pid}")
             compute = 0
             while self.tick_count <= 300:
                 compute += 1
-                #print(self.tick_count)
-                #if self.status  == TaskStatus.BLOCKED:
-                    #self.status.READY
-                    #greenlet.getcurrent().parent.switch()
+                # print("this runs")
+                # print(self.tick_count)
+                # if self.status  == TaskStatus.BLOCKED:
+                # self.status.READY
+                # greenlet.getcurrent().parent.switch()
 
-                if self.tick_count % 2 == 0:
+                if self.tick_count % 3 == 0:
                     interrupt_tick.enabled = False
                     self.status = TaskStatus.BLOCKED
                     greenlet.getcurrent().parent.switch()
 
-            print(self.tick_count)
             interrupt_tick.enabled = False
             self.status = TaskStatus.EXIT
             greenlet.getcurrent().parent.switch()
         else:
-            print(f"IO: {self.pid}")
             compute = 0
-            while self.tick_count <= 10:
+            while self.tick_count <= 300:
                 compute += 1
 
                 if self.tick_count % 10 == 0:
@@ -92,16 +101,14 @@ class Task:
                     self.status = TaskStatus.BLOCKED
                     greenlet.getcurrent().parent.switch()
 
-            print(self.tick_count)
             interrupt_tick.enabled = False
             self.status = TaskStatus.EXIT
             greenlet.getcurrent().parent.switch()
 
-
     # First test task, its CPU heavy.
     # def run(self, cfs_rq, start_tasks):
     #     """Simulated CPU-bound task that gets preempted."""
-    #     # print(f"▶️ Process {self.pid} started.")
+    #     # print(f" Process {self.pid} started.")
     #     compute = 0
     #     while self.tick_count <= 10:
     #         compute += 1
@@ -126,5 +133,3 @@ class Task:
     #     print(f"EXIT{TaskStatus.EXIT}")
     #     self.status = TaskStatus.EXIT
     #     greenlet.getcurrent().parent.switch()
-
-
