@@ -44,7 +44,7 @@ but I am not sure how to run it on Windows.
 
 1. Create virtual environment:
     ```bash
-    python -m venv venv
+    python3 -m venv venv
     source venv/bin/activate
     ```
 
@@ -55,7 +55,7 @@ but I am not sure how to run it on Windows.
 
 3. Run the simulator:
     ```bash
-    python main.py
+    python3 main.py
     ```
 
 4. Run tests:

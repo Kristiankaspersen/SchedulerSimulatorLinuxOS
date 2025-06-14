@@ -10,3 +10,4 @@ pytest==8.3.5
 qasync==0.27.1
 six==1.17.0
 wcwidth==0.2.13
+pandas
