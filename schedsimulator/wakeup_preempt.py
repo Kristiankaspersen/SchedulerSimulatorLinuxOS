@@ -29,18 +29,17 @@ def wakeup_preempt(cfs_rq, task):
     ttwu_do_active -> change state to running/ready, and enqueue_entity
     """
 
-    task.state = TaskStatus.READY
+    task.status = TaskStatus.READY
     sched = enqueue_entity(cfs_rq, task)
 
     if cfs_rq.curr is None:
         return True  # No one is running — this task should run
 
     preempt = check_preempt_wakeup_fair(cfs_rq, task)
+
     if preempt:
         sched = True
     return sched
-    # Lets just start with enqueueing first and making it work. And then we can try the check_preempt_wakeup_fair.
-    #return check_preempt_wakeup_fair(cfs_rq, task)
 
 
 def do_preempt_short(cfs_rq, pse, se):
@@ -65,14 +64,6 @@ def do_preempt_short(cfs_rq, pse, se):
         return True
 
     return False
-
-
-# First some logic from core.c first.
-# This is the only thing I need before calling check_prempt, which is wakeup_preempt
-# def ttwu_do_activate(self, task):
-#     task.state = "RUNNING"
-#     self.enqueue_entity(task)
-#     self.check_preempt(task)  # optional: only if modeling preemption
 
 def cancel_protect_slice(se):
     if protect_slice(se):
