@@ -19,11 +19,25 @@ sysctl_sched_base_slice = 30   # 28ms slice, in nanoseconds (Linux uses ns inter
 NICE_0_LOAD = 1024 # baseline weight for nice=0
 PLACE_LAG = True # Begin with this lag thing ON.
 RUN_TO_PARITY = True # Begin with this ON.
-PREEMPT_SHORT = False # Begin with this ON.
+PREEMPT_SHORT = True # Begin with this ON.
+SLEEP_TIME_INTERACTIVE = 3
+SLEEP_TIME_IO = 10
+
+#TASKS
+NUM_INTERACTIVE = 12
+NUM_CPU = 4
+NUM_IO = 4
+# TOT: 20 tasks
+
 # FOR Q-LEARNER
-ADAPTIVE = False
+ADAPTIVE = False # Set the adaptive version to true of false.
 cpu_offset = 0
 interactive_offset = 0
+EXIT_COUNT = 20
+INTERACTIVE_TIME_WINDOW = 100
+# This is new for counting the negative lag accumulated. (for debugging)
+io_negative_count = 0
+interactive_negative_count = 0
 
 nice_to_weight = {
         -20: 88761, -19: 71755, -18: 56483, -17: 46273, -16: 36291,
