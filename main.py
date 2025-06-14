@@ -21,32 +21,65 @@ if __name__ == '__main__':
 
 
         num_tasks = 20
-        base_slice = 10
-        num_runs = 1
+        #num_latency = 13
+        #num_io = 4
+        #num_cpu = 3
+        base_slice = 30 # Just used for the print, nothing else
+        num_runs = 1   # Here you pick how many times you want to run, 10 was used in the tests.
+
 
         preemption_results = []
         throughput_results = []
         latency_results = []
+        io_latency_results = []
+        cpu_latency_results = []
+        resp_latency_results = []
+        cpu_throughput_results = []
 
         for i in range(num_runs):
             print(f"\n--- Run {i + 1} ---")
+            seed = 42 + i
             eevdf_scheduler = EEVDFScheduler()
-            preemptions, throughput, avg_latency = eevdf_scheduler.make_sim_eevdf(num_tasks)
+            (
+                preemptions,
+                throughput,
+                avg_latency,
+                avg_io_latency,
+                avg_cpu_latency,
+                avg_resp_latency,
+                cpu_throughput
+            ) = eevdf_scheduler.make_sim_eevdf(seed=seed)
 
             preemption_results.append(preemptions)
             throughput_results.append(throughput)
             latency_results.append(avg_latency)
+            io_latency_results.append(avg_io_latency)
+            cpu_latency_results.append(avg_cpu_latency)
+            resp_latency_results.append(avg_resp_latency)
+            cpu_throughput_results.append(cpu_throughput)
 
+
+        # Compute averages
         avg_preemptions = sum(preemption_results) / num_runs
         avg_throughput = sum(throughput_results) / num_runs
         avg_latency = sum(latency_results) / num_runs
+        avg_io_latency = sum(io_latency_results) / num_runs
+        avg_cpu_latency = sum(cpu_latency_results) / num_runs
+        avg_resp_latency = sum(resp_latency_results) / num_runs
+        avg_cpu_throughput = sum(cpu_throughput_results) / num_runs
 
+
+        # Print summary
         print("\n=== Summary ===")
         print(f"Num tasks: {num_tasks}")
         print(f"Base Slice: {base_slice}")
         print(f"Average preemptions: {avg_preemptions:.2f}")
         print(f"Average throughput: {avg_throughput:.7f} tasks/sec")
-        print(f"Average latency: {avg_latency / 1_000_000:.3f} ms")
+        print(f"Average latency (overall): {avg_latency / 1_000_000:.3f} ms")
+        print(f"Average latency (interactive): {avg_resp_latency / 1_000_000:.3f} ms")
+        print(f"Average latency (CPU-heavy): {avg_cpu_latency / 1_000_000:.3f} ms")
+        print(f"Average latency (I/O): {avg_io_latency / 1_000_000:.3f} ms")
+        print(f"Average CPU-heavy throughput: {avg_cpu_throughput:.7f} tasks/sec")
 
 
 
