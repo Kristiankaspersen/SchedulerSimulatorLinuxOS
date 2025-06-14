@@ -10,15 +10,12 @@ from schedsimulator.utils import entity_eligible, protect_slice, entity_before, 
 
 
 def set_next_entity(cfs_rq, next):
-    #if next.on_rq # You're checking on_rq, but earlier logic (like put_prev_entity) may have already called dequeue_entity(), which removed it from the tree but didn’t reset on_rq correctly
     if next.rb_node is not None:   # That guarantees you only remove it if it’s actually in the tree.
         __dequeue_entity(cfs_rq, next)
-        #cfs_rq.task_timeline.print_tree()
 
     cfs_rq.curr = next
     cfs_rq.curr.on_rq = True
 
-    # Do not know what I need with prev-sun_exc_runtime
     next.prev_sum_exec_runtime = next.sum_exec_runtime
     next.exec_start = cfs_rq.virtual_global_clock_ns  # Important for correct delta_exec!
     next.tick_offset = cfs_rq.virtual_global_clock_ns
@@ -29,7 +26,7 @@ def set_next_entity(cfs_rq, next):
 
 def calculate_latency(cfs_rq,  task):
     task.latency = time.time_ns() - task.enqueue_time
-    task.latency_virtual = cfs_rq.virtual_global_clock_ns
+    task.latency_virtual = task.exec_start - task.enqueue_time_virtual
     cfs_rq.latencies.append(task.latency)
     if task.type == TaskType.CPU:
         cfs_rq.cpu_latencies.append(task.latency)
@@ -37,6 +34,9 @@ def calculate_latency(cfs_rq,  task):
     elif task.type == TaskType.RESP:
         cfs_rq.resp_latencies.append(task.latency)
         cfs_rq.resp_latencies_virtual.append(task.latency_virtual)
+    else:
+        cfs_rq.io_latencies.append(task.latency)
+
 
 def put_prev_entity(cfs_rq, prev):
     if prev is not None:
@@ -44,9 +44,7 @@ def put_prev_entity(cfs_rq, prev):
             update_curr(cfs_rq)
 
         if prev.on_rq:
-        #if prev.rb_node is None:
-            #print(f"enqueue pid: {prev.pid}")
-            __enqueue_entity(cfs_rq, prev)   #simplified __enqueue_entity()
+            __enqueue_entity(cfs_rq, prev)
 
         assert cfs_rq.curr == prev, "BUG: prev task is not current!"
         cfs_rq.curr = None
@@ -58,19 +56,16 @@ def pick_next_entity(cfs_rq):
     return pick_eevdf(cfs_rq)
 
 def pick_task_fair(cfs_rq):
-    # Might update_curr()
     return pick_next_entity(cfs_rq)
 
 def pick_next_task_fair(cfs_rq, prev):
     # Ensure prev is gone if it's not runnable
     if prev and prev.status in [TaskStatus.EXIT, TaskStatus.BLOCKED]:
         if prev.rb_node is not None:
-            print(f"It does not do this more then once {prev.pid} ")
-            #assert False, "DOES THIS happen?? NEEEEVER"
-            __dequeue_entity(cfs_rq, prev)  # Always call, since it's not removed yet
+            __dequeue_entity(cfs_rq, prev)
         prev = None
+        cfs_rq.curr = None
 
-    #cfs_rq.task_timeline.print_tree()
     next = pick_task_fair(cfs_rq)
 
     if not next:
@@ -85,20 +80,15 @@ def pick_next_task_fair(cfs_rq, prev):
 
     if next != prev:
         put_prev_entity(cfs_rq, prev)
-        # __set_next_task_fair(rq, p, true);
-    #print(f"\nNext task pid: {next.pid}, deadline: {next.deadline}, min_vruntime {next.min_vruntime}\n")
-    #cfs_rq.task_timeline.print_tree()
+
     set_next_entity(cfs_rq, next)
     return next
 
 def pick_eevdf(cfs_rq):
-    # TODO need to check if pick_first_entity is correct.
     node = cfs_rq.task_timeline.root
     task = cfs_rq.task_timeline.pick_first_entity()
     curr = cfs_rq.curr
     best = None
-
-    #cfs_rq.task_timeline.print_tree()
 
     # I added this, since if not we get an error of node.min_vruntime not existing.
     if node is None:
@@ -108,11 +98,6 @@ def pick_eevdf(cfs_rq):
 
     if cfs_rq.nr_queued == 1:
         return curr if curr and curr.on_rq else task
-
-    #TODO not needed, I included this
-    if not vruntime_eligible(cfs_rq, node.min_vruntime):
-        #assert False,  "Should not happen.."
-        return curr  # no entity is eligible yet
 
     if curr and (not curr.on_rq or not entity_eligible(cfs_rq, curr)):
         curr = None
@@ -124,25 +109,34 @@ def pick_eevdf(cfs_rq):
     if task and entity_eligible(cfs_rq, task):
         best = task
     else:
-        # best = find_eligible_entity(node, cfs_rq)
-        #Heap search for the EEVD entity
-        while node is not None:
-            left = node.left
-            # Eligible entities in left subtree are always better
-            # choice, since they have earlier deadline.
-            if left and vruntime_eligible(cfs_rq, left.min_vruntime):
-                node = left
-                continue
-            task = node.task
+        # Found a potantial bug in the code I mirrored from linux, therefore I used this function instead.
+        # This function makes sure it finds something eligible.
 
-            if entity_eligible(cfs_rq, task):
-                best = task
-                break
-            node = node.right
+        best = find_eligible_entity(node, cfs_rq)
+        # Potential bugs:
+        # - Checks left without ever checking root, and the right from root.
+        # - Also when we go right again, we go to the left at once, again without checking the right node.
+        # #Heap search for the EEVDF entity
+        # while node is not None:
+        #     left = node.left
+        #     # Eligible entities in left subtree are always better
+        #     # choice, since they have earlier deadline.
+        #     if left and vruntime_eligible(cfs_rq, left.min_vruntime):
+        #         node = left
+        #         continue
+        #     task = node.task
+        #
+        #     if entity_eligible(cfs_rq, task):
+        #         best = task
+        #         break
+        #     node = node.right
 
     #found
     if (best is None) or ((curr is not None) and entity_before(curr, best)):
         best = curr
+
+    assert not (cfs_rq.task_timeline.root is not None and best is None), \
+        "BUG: task_timeline has a root, but no best task was selected"
 
     return best
 
@@ -159,6 +153,5 @@ def find_eligible_entity(node, cfs_rq):
     # Then check this node
     if entity_eligible(cfs_rq, node.task):
         return node.task
-
     # Then check right subtree
     return find_eligible_entity(node.right, cfs_rq)
