@@ -16,7 +16,7 @@ def update_entity_lag(cfs_rq, task):
     task.vlag = max(-limit, min(vlag, limit))  # clamp to [-limit, limit]
 
 
-# Missing
+
 def __dequeue_entity(cfs_rq, task):
     cfs_rq.task_timeline.remove(task)
     task.on_rq = False
@@ -33,19 +33,20 @@ def sub_task_type(cfs_rq, task):
     else:
         cfs_rq.num_other -= 1
 
-#TODO: Think about resched and stuff like that, in dequeue, how do I handle that
-#DAMN, then I really need to return resched.
 def dequeue_entity(cfs_rq, task):
     update_curr(cfs_rq)
     update_entity_lag(cfs_rq, task)
 
+    # FOR REPLICATING SCENARIO 2, add this
     # Need to update how many tasks there are of the types:
-    if task.type == TaskType.RESP:
-        cfs_rq.num_interactive -= 1
-    elif task.type == TaskType.CPU:
-        cfs_rq.num_cpu -= 1
-    else:
-        cfs_rq.num_other -= 1
+    # This is the bug I found that have an effect on scenario 2 in particular, managed to count the task two times.
+    # Here, and in sub_task_type() function. I think i moved this in to a function, and just forgot to remove it. The same for enqueue.
+    # if task.type == TaskType.RESP:
+    #     cfs_rq.num_interactive -= 1
+    # elif task.type == TaskType.CPU:
+    #     cfs_rq.num_cpu -= 1
+    # else:
+    #     cfs_rq.num_other -= 1
     """
     the task!= cfs_rq.curr is not straight forward
     - seems like when something !preempt (meaning, block/sleep or exit) -> look at try_block in __schedule( in core. 
@@ -84,16 +85,14 @@ def dequeue_entity(cfs_rq, task):
     - The dequeing happens when we pick the next
     """
     if task != cfs_rq.curr and task.on_rq:
-        print(f"In Dequeue, doing __dequuee, does it happen here? {task.pid}")
         __dequeue_entity(cfs_rq, task) # This is the only thing I am missing now for my code.
 
-    cfs_rq.task_timeline.print_tree()
+    #cfs_rq.task_timeline.print_tree()
     assert task.on_rq, f"BUG: Trying to dequeue task not on runqueue (pid={task.pid})"
     task.on_rq = False
     cfs_rq.nr_queued -= 1 # Not in real code
     assert cfs_rq.nr_queued >= 0, f"BUG: nr_queued went negative at PID={task.pid}"
 
-    # Maybe I am missing some shit here..
     update_min_vruntime(cfs_rq)
 
 
