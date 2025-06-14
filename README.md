@@ -37,6 +37,11 @@ SchedulerSimulatorLinuxOS is a Python-based simulator designed to mimic the curr
 
 ## Setup
 
+**Important Note:**  
+This simulator uses Unix signals (via Python’s `signal` module), which are not fully supported on Windows.  
+The implementation has only been tested on macOS. Running it on Linux should work the same way,  
+but I am not sure how to run it on Windows. 
+
 1. Create virtual environment:
     ```bash
     python -m venv venv
