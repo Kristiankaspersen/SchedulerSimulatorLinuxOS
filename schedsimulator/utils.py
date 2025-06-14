@@ -29,10 +29,6 @@ def calc_delta_fair(delta_exac, task):
 def entity_key(cfs_rq, task):
     return task.vruntime - cfs_rq.min_vruntime
 
-# Specifically: avg_runtime() + 0 must result in entity_eligible() := true
-# For this to be so, the result of this function must have a left bias.
-# Adjusted this, simplified for my sim, look at linux source code for the real one.
-# TODO verify that this works.
 def avg_vruntime(cfs_rq):
     """
     This is used in:
@@ -44,7 +40,7 @@ def avg_vruntime(cfs_rq):
     load = cfs_rq.avg_load
 
     if curr and curr.on_rq:
-        weight = curr.weight #In Linux this is scaled, think about this
+        weight = curr.weight #In Linux this is scaled, not needed here.
         avg += entity_key(cfs_rq, curr) * weight
         load += weight
 
@@ -58,12 +54,10 @@ def avg_vruntime(cfs_rq):
     return cfs_rq.min_vruntime + avg
 
 def avg_vruntime_update(cfs_rq, delta):
-    # DONE
     #v' = v + d ==> avg_vruntime' = avg_runtime - d * avg_load
     cfs_rq.avg_vruntime -= cfs_rq.avg_load * delta
 
 def __update_min_vruntime(cfs_rq, vruntime):
-    #(DONE)
     min_vruntime = cfs_rq.min_vruntime
     delta = vruntime - min_vruntime
 
@@ -74,15 +68,12 @@ def __update_min_vruntime(cfs_rq, vruntime):
 
 
 def update_min_vruntime(cfs_rq):
-    # This is done.
-    # Maybe I need a function for picking root.
     root_node = pick_root_entity(cfs_rq) #task = pick_root_entity(cfs_run_queue)
     curr = cfs_rq.curr
     vruntime = cfs_rq.min_vruntime
 
     if curr:
         if curr.on_rq:
-            #print(f"curr pid: {curr.pid}, on_rq: {curr.on_rq}, vruntime: {curr.vruntime}")
             vruntime = curr.vruntime
         else:
             curr = None
