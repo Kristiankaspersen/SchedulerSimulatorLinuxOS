@@ -37,30 +37,22 @@ def update_curr(cfs_rq):
     curr = cfs_rq.curr
     if curr is None:
         return False
-    # Think is done
-    #delta_exac = time.perf_counter_ns() - curr.exec_start
     delta_exac = update_curr_se(cfs_rq, cfs_rq.curr)
-    #print(f"DELTA EXAC: {curr.exec_start}")
-    #print(f"DELTA EXAC: {delta_exac}")
 
-    # Done
     if delta_exac <= 0:
-        #print("DOES THIS HAPPEN?!?!?!")
         return False
 
     curr.vruntime += calc_delta_fair(delta_exac, curr)
     resched = update_deadline(cfs_rq.curr)
 
-    # Done
     update_min_vruntime(cfs_rq)
     return resched
 
-#TODO update this as well.Write about this.
 def update_curr_se(cfs_rq, curr):
     now = cfs_rq.virtual_global_clock_ns
 
     delta_exec = now - curr.exec_start
-    if delta_exec <= 0: #Very unlikely
+    if delta_exec <= 0:
         return delta_exec
     curr.exec_start = now
     curr.sum_exec_runtime += delta_exec
