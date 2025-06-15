@@ -18,13 +18,13 @@ This repository contains the simulation code, experiments, and configurations th
     - Mistakes in section 4.2.2 in the design chapter in the thesis. 
       - "Average throughput for CPU-bound tasks", should be "Average CPU utilisation for CPU-bound tasks"
       - I accidentally changed the wording from ‘slice offset’ to ‘latency offset in section 4.2.2 subsection "Action Space" (should also ideally be a subsection, not subsubsection). I also write "increase latency offset", where is should be "decrease base-slice offset" 
-        - The code in this repository and algorithm 9 shows what actions space is correct.
-      - Learning episodes in section 4.2.4
-        - I write "The agent starts with an empty Q-table where all values are set to zero.", this is not correct, it is pre initialised as explained in the next subsection. 
+        - The code in this repository and algorithm 9 shows what actions are really taken.
+    - Learning episodes in section 4.2.4
+      - I write "The agent starts with an empty Q-table where all values are set to zero.", this is not correct, it is pre initialised as explained in the next subsection. 
   - Results
-    - Evaluation setup
+    - Evaluation setup 6.3.1: 
       - Wrote "per-task latency for interactive tasks", meant "average latency for interactive tasks"
-    - Scenario results
+    - Scenario results 6.3.2: 
       - Interactive max clamp is 30 (base_slice), not 10.
 
 
